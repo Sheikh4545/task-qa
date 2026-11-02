@@ -6,6 +6,7 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 auth.json
+.env
 
 # Allure Reports and Results
 allure-report/
