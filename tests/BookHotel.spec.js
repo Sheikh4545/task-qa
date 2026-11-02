@@ -45,11 +45,11 @@
 // });
 
 import BookHotel from '../Pages/BookHotel';
-import LoginPage from '../Pages/LoginPage';
 import SearchHotel from '../Pages/SearchHotel';
 import SelectHotel from '../Pages/SelectHotel';
 import BookData from '../testdata/BookData.json';
 import SearchData from '../testdata/SearchData.json';
+import Logout from '../Pages/Logout';
 import { test, expect } from '../Fixture/TestSetup';
 import { attachStepScreenshot } from '../utilities/screenshot';
 import AssertionData from '../testdata/AssertionData.json';
@@ -64,20 +64,17 @@ test.describe('Book Hotel Suite', () => {
 
   // Helper function to navigate cleanly up to the Book Hotel page
   async function navigateToBookPage(page) {
-    const loginPage = new LoginPage(page);
     searchHotelPage = new SearchHotel(page);
     selectHotelPage = new SelectHotel(page);
     bookHotel = new BookHotel(page);
-
+    
     sData = SearchData.ValidUser[0];
 
-    // Start each test with a fresh authenticated session.
-    await loginPage.gotoUrl();
-    await loginPage.login(AppConfig.username, AppConfig.password);
+    // 0. Ensure we start fresh on the Search Hotel page using our auth session
+    await page.goto(AppConfig.searchUrl);
     await expect(page).toHaveURL(AssertionData.assertions[0].search_hotel_url);
 
-    // 1. Search for a hotel
-    await searchHotelPage.gotosearch();
+    // 1. Perform Search
     await searchHotelPage.searchHotel(
       sData.searchLocation,
       sData.searchHotel,
@@ -144,12 +141,7 @@ test.describe('Book Hotel Suite', () => {
     });
 
     await test.step('Verify Booking Blocked & Error Label Shown', async () => {
-      // Ensure we did NOT successfully advance to confirmation
       expect(page.url()).not.toContain('BookingConfirm.php');
-      
-      // Check that an error message label is visible on the page
-      const errorLabel = page.locator('.auth_error, tr td input.error, label.error, #cc_num_span');
-      // Alternatively, verify the form fields are still present (meaning we didn't leave the booking form)
       await expect(page.locator('#first_name')).toBeVisible();
       await attachStepScreenshot(page, 'Booking Failed - Invalid CC Number');
     });
