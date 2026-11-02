@@ -45,6 +45,7 @@
 // });
 
 import BookHotel from '../Pages/BookHotel';
+import LoginPage from '../Pages/LoginPage';
 import SearchHotel from '../Pages/SearchHotel';
 import SelectHotel from '../Pages/SelectHotel';
 import BookData from '../testdata/BookData.json';
@@ -63,13 +64,19 @@ test.describe('Book Hotel Suite', () => {
 
   // Helper function to navigate cleanly up to the Book Hotel page
   async function navigateToBookPage(page) {
+    const loginPage = new LoginPage(page);
     searchHotelPage = new SearchHotel(page);
     selectHotelPage = new SelectHotel(page);
     bookHotel = new BookHotel(page);
-    
+
     sData = SearchData.ValidUser[0];
 
-    // 1. Go to Search Page & Search
+    // Start each test with a fresh authenticated session.
+    await loginPage.gotoUrl();
+    await loginPage.login(AppConfig.username, AppConfig.password);
+    await expect(page).toHaveURL(AssertionData.assertions[0].search_hotel_url);
+
+    // 1. Search for a hotel
     await searchHotelPage.gotosearch();
     await searchHotelPage.searchHotel(
       sData.searchLocation,
