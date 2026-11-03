@@ -72,8 +72,6 @@
 //     });
 //   });
 // });
-
-
 import ConfirmHotel from '../Pages/ConfirmHotel';
 import LoginPage from '../Pages/LoginPage';
 import SearchHotel from '../Pages/SearchHotel';
