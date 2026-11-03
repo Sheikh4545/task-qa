@@ -1,77 +1,74 @@
-// import { test, expect } from '@playwright/test';
-// test('Update User API', async ({ request }) => {
-// const response = await request.put(
-// 'https://api-testing-postman.vercel.app/api/v1/users/replace-account',
-// {
-//  data: {
-//   "fullname": "alitester1",
-//   "email": "alitester1@gmail.com",
-//   "username": "alitester1",
-//   "password": "alitester1"
-// },
-//  data:{
-//   "fullname": "ahmad1",
-//   "email": "ahmad1@gmail.com",
-//   "username": "ahmad1",
-//   "password": "ahmad1"
-// }
-// }
-// );
-
-// expect(response.status()).toBe(200);
-
-// });
-
+import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
-// import { attachStepScreenshot } from '../../utilities/screenshot';
-import { attachApiLog } from '../../utilities/apiLogger';
- 
-test('Patch', async ({ request, page }, testInfo) => {
+import { attachApiLog } from '../../utilities/apiLogger.js';
 
-  const endpoint = 'https://api-testing-postman.vercel.app/api/v1/users/update-account';
+const baseURL = process.env.BASE_URL;
 
-  const patch = await request.patch(
+test('Update authenticated user account with PATCH', async ({ request }) => {
+    expect(baseURL, 'Set BASE_URL in .env before running API tests').toBeTruthy();
 
-    endpoint,
+    const id = randomUUID();
+    const user = {
+        fullname: `Playwright ${id}`,
+        email: `${id}@example.com`,
+        username: `pw-${id}`,
+        password: `Pw-${id}-test`,
+    };
 
-    {
+    const registerResponse = await request.post(
+        `${baseURL}/api/v1/users/register`,
+        { data: user },
+    );
+    const registerBody = await registerResponse.json();
+    await attachApiLog('Register Test User Response', {
+        status: registerResponse.status(),
+        body: registerBody,
+    });
+    expect(registerResponse.status()).toBe(201);
 
-      data: {
+    let authenticated = false;
 
-        fullname: 'fahadna',
-        email: 'fahadna@gmail.com',
+    try {
+        const loginResponse = await request.post(
+            `${baseURL}/api/v1/users/login`,
+            { data: { username: user.username, password: user.password } },
+        );
+        const loginBody = await loginResponse.json();
+        await attachApiLog('Login Test User Response', {
+            status: loginResponse.status(),
+            body: loginBody,
+        });
+        expect(loginResponse.status()).toBe(200);
+        authenticated = true;
 
-      },
-      data:{
-       "fullname": "ahmad1",
-       "email": "ahmad1@gmail.com",
-       "username": "ahmad1",
-      "password": "ahmad1"
-}
+        const updatedUser = {
+            fullname: `Updated ${id}`,
+            email: user.email,
+            username: user.username,
+        };
+        const patchResponse = await request.patch(
+            `${baseURL}/api/v1/users/update-account`,
+            { data: updatedUser },
+        );
+        const patchBody = await patchResponse.json();
+        await attachApiLog('PATCH API Response', {
+            status: patchResponse.status(),
+            body: patchBody,
+        });
 
+        expect(patchResponse.status()).toBe(200);
+        expect(patchBody.success).toBe(true);
+    } finally {
+        if (authenticated) {
+            const deleteResponse = await request.delete(
+                `${baseURL}/api/v1/users/delete-account`,
+            );
+            const deleteBody = await deleteResponse.json();
+            await attachApiLog('Delete Test User Response', {
+                status: deleteResponse.status(),
+                body: deleteBody,
+            });
+            expect(deleteResponse.status()).toBe(200);
+        }
     }
-
-  );
- 
-  const patchResponse = await patch.json();
- 
-  console.log('PATCH Response:', patchResponse);
- 
-  await attachApiLog('PATCH API Output', {
-
-    method: 'PATCH',
-
-    url: endpoint,
-
-    status: patch.status(),
-
-    statusText: patch.statusText(),
-
-    response: patchResponse
-
-  }, page, testInfo);
- 
-  expect(patch.status()).toBe(200);
-
 });
- 
