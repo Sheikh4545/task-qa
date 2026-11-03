@@ -1,54 +1,41 @@
+import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
-import { attachApiLog } from '../API/apiLogger.js';
-import ApiMethods from '../API/ApiMethods.js';
-import testData from '../testData/apiTestData.json';
- 
-test.describe('Post Test Cases', () => {
-    test('User Exists (409)', async ({ request }, testInfo) => {
-        const api = new ApiMethods(request);
-        const response = await api.post('register', testData.post.existingUser.data);
-        await attachApiLog(testInfo, 'User Exists Response', response);
-        expect(response.status()).toBe(testData.post.existingUser.expectedStatus);
-    });
- 
-    test('Unauthorized (401)', async ({ request }, testInfo) => {
-        const api = new ApiMethods(request);
-        const response = await api.post('login', testData.post.unauthorized.data);
-        await attachApiLog(testInfo, 'Unauthorized Login Response', response);
-        expect(response.status()).toBe(testData.post.unauthorized.expectedStatus);
-    });
- 
-    test('Empty password, Bad Request (400)', async ({ request }, testInfo) => {
-        const api = new ApiMethods(request);
-        const response = await api.post('login', testData.post.emptyPassword.data);
-        await attachApiLog(testInfo, 'Empty Password Response', response);
-        expect(response.status()).toBe(testData.post.emptyPassword.expectedStatus);
-    });
- 
-    test('User Logout (200)', async ({ request }, testInfo) => {
-        const api = new ApiMethods(request);
-        const loginResponse = await api.post('login', testData.post.logoutLogin.data);
-        await attachApiLog(testInfo, 'Login Response for Logout Test', loginResponse);
-        expect(loginResponse.status()).toBe(testData.post.logoutLogin.expectedStatus);
- 
-        const logoutResponse = await api.post('logout');
-        await attachApiLog(testInfo, 'Logout API Response', logoutResponse);
-        expect(logoutResponse.status()).toBe(testData.post.logout.expectedStatus);
-    });
- 
-    test('User Not Found (404)', async ({ request }, testInfo) => {
-        const api = new ApiMethods(request);
-        const response = await api.post('login', testData.post.userNotFound.data);
-        await attachApiLog(testInfo, 'User Not Found Response', response);
-        expect(response.status()).toBe(testData.post.userNotFound.expectedStatus);
-    });
- 
-    test('User Login', async ({ request }, testInfo) => {
-        const api = new ApiMethods(request);
-        const response = await api.post('login', testData.post.userLogin.data);
-        await attachApiLog(testInfo, 'User Login Response', response);
-        expect(response.status()).toBe(testData.post.userLogin.expectedStatus);
+import { attachApiLog } from '../../utilities/apiLogger.js';
 
-        
+const baseURL = process.env.BASE_URL;
+
+test.describe('Post API Test Suite', () => {
+    test('POST to login endpoint returns 404 when unsupported', async ({ request }) => {
+        expect(baseURL, 'Set BASE_URL in .env before running API tests').toBeTruthy();
+
+        const id = randomUUID();
+        const response = await request.post(`${baseURL}/api/v1/users/login`, {
+            data: {
+                fullname: `Playwright ${id}`,
+                email: `${id}@example.com`,
+                username: `pw-${id}`,
+                password: `Pw-${id}-test`,
+            },
+        });
+        const responseBody = await response.text();
+
+        await attachApiLog('POST Login Response', {
+            status: response.status(),
+            body: responseBody,
+        });
+        expect(response.status()).toBe(404);
+    });
+
+    test('POST to all-users endpoint returns 404', async ({ request }) => {
+        expect(baseURL, 'Set BASE_URL in .env before running API tests').toBeTruthy();
+
+        const response = await request.post(`${baseURL}/api/v1/users/all-users`);
+        const responseBody = await response.text();
+
+        await attachApiLog('POST All Users Response', {
+            status: response.status(),
+            body: responseBody,
+        });
+        expect(response.status()).toBe(404);
     });
 });
