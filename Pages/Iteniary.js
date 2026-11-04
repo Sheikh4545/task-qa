@@ -8,7 +8,7 @@ class Itinerary {
         this.page = page;
         // Locator for the Booked Itinerary menu link in the header
         this.bookedItineraryLink = page.getByRole('link', { name: 'Booked Itinerary' });
-        this.searchHotelButton = page.locator('#search_hotel');
+        this.searchHotelButton = page.getByRole('link', { name: 'Search Hotel' });
     }
 
     async gotoItinerary() {
@@ -21,8 +21,8 @@ class Itinerary {
 
     async verifyItinerary() {
         await test.step('Perform itinerary search/action', async () => {
-            await this.searchHotelButton.click();
-            await this.page.waitForLoadState('load').catch(() => {});
+            await this.searchHotelButton.click({ noWaitAfter: true });
+            await this.page.waitForURL(AppConfig.searchUrl);
             await attachStepScreenshot(this.page, '01 - After itinerary action');
         });
     }
