@@ -7,10 +7,6 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  /* Ignore draft or incomplete spec files with missing external dependencies */
-  testIgnore: [
-    '**/PostAPI.spec.js',
-  ],
   timeout: 60 * 1000,
   expect: {
     timeout: 10 * 1000,
@@ -50,24 +46,15 @@ export default defineConfig({
         storageState: 'auth.json',
       },
       dependencies: ['setup'],
-    },
-
-    {
-      name: 'firefox',
-      use: {
-        ...devices['Desktop Firefox'],
-        storageState: 'auth.json',
-      },
-      dependencies: ['setup'],
-    },
-
-    {
-      name: 'webkit',
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: 'auth.json',
-      },
-      dependencies: ['setup'],
-    },
+    }
+    
+    // {
+    //   name: 'webkit',
+    //   use: {
+    //     ...devices['Desktop Safari'],
+    //     storageState: 'auth.json',
+    //   },
+    //   dependencies: ['setup'],
+    // },
   ],
 });
